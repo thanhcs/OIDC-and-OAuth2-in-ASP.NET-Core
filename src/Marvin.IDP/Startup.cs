@@ -21,6 +21,8 @@ namespace Marvin.IDP
                 .AddTestUsers(Config.GetUsers())
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryClients(Config.GetClients());
+
+            services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -30,9 +32,15 @@ namespace Marvin.IDP
             {
                 app.UseDeveloperExceptionPage();
             }
+
             loggerFactory.AddConsole();
             loggerFactory.AddDebug();
+
+            app.UseStaticFiles();
+
             app.UseIdentityServer();
+
+            app.UseMvcWithDefaultRoute();
 
             //app.Run(async (context) =>
             //{
