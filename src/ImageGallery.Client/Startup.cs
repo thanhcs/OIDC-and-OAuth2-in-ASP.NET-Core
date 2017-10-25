@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using ImageGallery.Client.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 namespace ImageGallery.Client
 {
@@ -27,6 +29,28 @@ namespace ImageGallery.Client
         {
             // Add framework services.
             services.AddMvc();
+
+            // https://docs.microsoft.com/en-us/aspnet/core/migration/1x-to-2x/identity-2x
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddOpenIdConnect(options =>
+                {
+                    options.Authority = "https://localhost:44303/";
+                    options.RequireHttpsMetadata = true;
+                    options.ClientId = "imagegalleryclient";
+                    //options.Scope = { "openid", "profile" }
+                    options.ResponseType = "code id_token";
+                    //options.CallbackPath = new PathString();
+                    options.SignInScheme = "Cookies";
+                    options.SaveTokens = true;
+                    options.ClientSecret = "secret";
+                    options.GetClaimsFromUserInfoEndpoint = true;
+                });
+
 
             // register an IHttpContextAccessor so we can access the current
             // HttpContext in services by injecting it
@@ -51,6 +75,8 @@ namespace ImageGallery.Client
             {
                 app.UseExceptionHandler("/Shared/Error");
             }
+
+            app.UseAuthentication();
             
             app.UseStaticFiles();
 
