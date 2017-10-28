@@ -10,8 +10,12 @@ using Newtonsoft.Json;
 using ImageGallery.Model;
 using System.Net.Http;
 using System.IO;
+using IdentityModel;
+using IdentityModel.Client;
 using ImageGallery.Client.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace ImageGallery.Client.Controllers
@@ -180,14 +184,36 @@ namespace ImageGallery.Client.Controllers
             // write out the user claims
             foreach (var claim in User.Claims)
             {
-                Debug.WriteLine($"Claim type: {claim.Type} - Cliam value: {claim.Value}");
+                Debug.WriteLine($"Claim type: {claim.Type} - Claim value: {claim.Value}");
             }
+        }
+
+        [Authorize(Roles = "PayingUser")]
+        public async Task<IActionResult> OrderFrame()
+        {
+            var discoveryClient = new DiscoveryClient("https://localhost:44303/");
+            var metaDataResponse = await discoveryClient.GetAsync();
+
+            var userInfoClient = new UserInfoClient(metaDataResponse.UserInfoEndpoint);
+            var accessToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
+
+            var response = await userInfoClient.GetAsync(accessToken);
+
+            if (response.IsError)
+            {
+                throw new Exception(
+                    "Problem accessing the UserInfo endpoint.", response.Exception);
+            }
+
+            var address = response.Claims.FirstOrDefault(c => c.Type == "address")?.Value;
+
+            return View(new OrderFrameViewModel(address));
         }
 
         public async Task Logout()
         {
-            await HttpContext.SignOutAsync("Cookies");
-            await HttpContext.SignOutAsync("oidc");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
         }
     }
 }
