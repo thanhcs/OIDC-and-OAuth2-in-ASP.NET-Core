@@ -51,6 +51,7 @@ namespace ImageGallery.Client
                     options.Scope.Add("openid");
                     options.Scope.Add("profile");
                     options.Scope.Add("address");
+                    options.Scope.Add("imagegalleryapi");
                     //options.CallbackPath = new PathString();
                     //options.SignedOutCallbackPath = new PathString("");
                     options.SignInScheme = "Cookies";

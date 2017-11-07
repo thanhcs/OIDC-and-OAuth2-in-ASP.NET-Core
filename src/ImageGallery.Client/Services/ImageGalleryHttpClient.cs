@@ -3,6 +3,8 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace ImageGallery.Client.Services
 {
@@ -17,8 +19,18 @@ namespace ImageGallery.Client.Services
         }
         
         public async Task<HttpClient> GetClient()
-        {      
-            _httpClient.BaseAddress = new Uri("http://localhost:1601/");
+        {
+            var accessToken = String.Empty;
+            var currentContext = _httpContextAccessor.HttpContext;
+
+            accessToken = await currentContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                _httpClient.SetBearerToken(accessToken);
+            }
+
+            _httpClient.BaseAddress = new Uri("https://localhost:44393/");
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));

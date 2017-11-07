@@ -23,10 +23,15 @@ namespace ImageGallery.API.Services
             return _context.Images.FirstOrDefault(i => i.Id == id);
         }
   
-        public IEnumerable<Image> GetImages()
+        public IEnumerable<Image> GetImages(string ownerId)
         {
             return _context.Images
-                .OrderBy(i => i.Title).ToList();
+                .OrderBy(i => i.Title).Where(i => i.OwnerId == ownerId).ToList();
+        }
+
+        public bool isImageOwner(Guid id, string ownerId)
+        {
+            return _context.Images.Any(i => i.Id == id && i.OwnerId == ownerId);
         }
 
         public void AddImage(Image image)
